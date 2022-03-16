@@ -31,4 +31,21 @@ app.use(pushStateRouting(apiRoot, staticDir));
 
 app.use(logErrors());
 
+app.use((req, res, next) => {
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader(
+		"Access-Control-Allow-Methods",
+		"GET, POST, DELETE, PUT, PATCH"
+	);
+	res.setHeader("Access-Control-Allow-Headers", "application/json");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+	res.header(
+		"Access-Control-Allow-Headers",
+		"Access-Control-Allow-Methods",
+		"Access-Control-Allow-Origin",
+		"Origin, X-Requested-With, Content-Type, Accept"
+	);
+	next();
+});
+
 export default app;
