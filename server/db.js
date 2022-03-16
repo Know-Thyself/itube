@@ -5,8 +5,9 @@ const port = process.env.PORT || 8000;
 
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
-		ssl: process.env.DB_URL.includes("localhost")	? false
-		: { rejectUnauthorized: false },
+	ssl: {
+		rejectUnauthorized: false,
+	},
 	host: "ec2-99-81-177-233.eu-west-1.compute.amazonaws.com",
 	port: 5432,
 	user: "dfucnpmppfvlod",
