@@ -6,6 +6,7 @@ import logo from "./logo.svg";
 
 export function Home() {
 	const [message, setMessage] = useState("Loading...");
+	const [questions, setQuestions] = useState([]);
 
 	useEffect(() => {
 		fetch("/api")
@@ -21,6 +22,13 @@ export function Home() {
 			.catch((err) => {
 				console.error(err);
 			});
+	}, []);
+
+	useEffect(() => {
+		fetch("/api/questions")
+			.then((res) => res.json())
+			.then((data) => setQuestions(data))
+			.catch((err) => console.error(err));
 	}, []);
 
 	return (
