@@ -3,17 +3,15 @@ require("dotenv").config();
 const express = require("express");
 const port = process.env.PORT || 8000;
 
+const isProduction = process.env.NODE_ENV === "production";
+const connectionString = `postgresql://${process.env.PG_USER}:${process.env.PG_PASSWORD}@${process.env.PG_HOST}:${process.env.PG_PORT}/${process.env.PG_DATABASE}`;
+
 const pool = new Pool({
-	connectionString: process.env.DATABASE_URL,
+	connectionString: isProduction ? process.env.DATABASE_URL : connectionString,
+	connectionTimeoutMillis: 5000,
 	ssl: {
 		rejectUnauthorized: false,
 	},
-	host: "ec2-99-81-177-233.eu-west-1.compute.amazonaws.com",
-	port: 5432,
-	user: "dfucnpmppfvlod",
-	password: "c04597e72f7d61cf9b7ac8fa60d2a31b57d8adeed9754735fe170a2ffd87dbc5",
-	database: "df2quvva25kmep",
-	connectionTimeoutMillis: 5000,
 });
 
 export const connectDb = async () => {

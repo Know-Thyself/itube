@@ -27,4 +27,22 @@ router.get("/answers", async (req, res) => {
 	}
 });
 
+router.post("/questions", async (req, res) => {
+	const category = req.body.category;
+	const title = req.body.title;
+	const question_content = req.body.question_content;
+	const asked_by = req.body.asked_by;
+	const ts = new Date().toString();
+	const questionInsertQuery =
+		"INSERT INTO questions (category, title, question_content, asked_by, ts) VALUES ($1, $2, $3, $4)";
+	try {
+		await db.query(questionInsertQuery, [category, title, question_content, asked_by, ts]);
+		res.json({
+			Success: `Your question is successfully posted!`,
+		});
+	} catch (error) {
+		res.status(500).send(error);
+	}
+});
+
 export default router;
