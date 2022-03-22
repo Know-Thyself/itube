@@ -34,7 +34,7 @@ router.post("/questions", async (req, res) => {
 	const asked_by = req.body.asked_by;
 	const ts = new Date().toString();
 	const questionInsertQuery =
-		"INSERT INTO questions (category, title, question_content, asked_by, ts) VALUES ($1, $2, $3, $4)";
+		"INSERT INTO questions (category, title, question_content, asked_by, ts) VALUES ($1, $2, $3, $4, $5)";
 	try {
 		await db.query(questionInsertQuery, [category, title, question_content, asked_by, ts]);
 		res.json({
