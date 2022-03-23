@@ -27,17 +27,13 @@ router.get("/answers", async (req, res) => {
 	}
 });
 
-router.post("/questions", async (req, res) => {
-	const category = req.body.category;
+router.patch("/questions", async (req, res) => {
 	const title = req.body.title;
 	const question_content = req.body.question_content;
-	const asked_by = req.body.asked_by;
-	const ts = new Date();
-	console.log(ts)
-	const questionInsertQuery =
-		"INSERT INTO questions (category, title, question_content, asked_by, ts) VALUES ($1, $2, $3, $4, $5)";
-	try {
-		await db.query(questionInsertQuery, [category, title, question_content, asked_by, ts]);
+	const id = req.body.title;
+	try { await db.query(
+				"UPDATE questions SET title=$1, question_content=$2 WHERE id=$3",
+				[title, question_content, id]);
 		res.json({
 			Success: `Your question is successfully posted!`,
 		});
