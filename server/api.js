@@ -30,7 +30,7 @@ router.get("/answers", async (req, res) => {
 router.patch("/questions", async (req, res) => {
 	const title = req.body.title;
 	const question_content = req.body.question_content;
-	const id = req.body.title;
+	const id = req.body.id;
 	try { await db.query(
 				"UPDATE questions SET title=$1, question_content=$2 WHERE id=$3",
 				[title, question_content, id]);
