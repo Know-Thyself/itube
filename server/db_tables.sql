@@ -1,6 +1,6 @@
 CREATE TABLE questions (
 	id SERIAL PRIMARY KEY,
-  catagory VARCHAR(200),
+    catagory VARCHAR(200),
 	title VARCHAR(200),
 	question_content TEXT NOT NULL,
 	asked_by VARCHAR(200) NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE questions (
 
 CREATE TABLE answers (
 	id SERIAL PRIMARY KEY,
-  catagory VARCHAR(200),
+    catagory VARCHAR(200),
 	title VARCHAR(200),
 	answer_content TEXT NOT NULL,
 	answered_by VARCHAR(200) NOT NULL,
