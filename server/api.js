@@ -2,116 +2,152 @@ import { Router } from "express";
 import db from "./db";
 const router = Router();
 
-router.get("/", (_, res) => {
-	res.json({ message: "Hello, world!" });
+router.use((req, res, next) => {
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader(
+		"Access-Control-Allow-Methods",
+		"GET, POST, DELETE, PUT, PATCH"
+	);
+	res.setHeader("Access-Control-Allow-Headers", "application/json");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+	res.header(
+		"Access-Control-Allow-Headers",
+		"Access-Control-Allow-Methods",
+		"Access-Control-Allow-Origin",
+		"Origin, X-Requested-With, Content-Type, Accept"
+	);
+  // res.header("Set-Cookie: cross-site-cookie=whatever; SameSite=None; Secure");
+	next();
 });
 
-const questionsQuery = "SELECT * FROM questions";
-const answersQuery = "SELECT * FROM answers";
+router.get("/", (req, res) => {
+	res.json({ message: "Server is ready!" });
+});
 
-router.get("/questions", async (req, res) => {
-	try {
-		const result = await db.query(questionsQuery);
-		res.json(result.rows);
-	} catch (error) {
-		res.status(500).send(error);
+const videosQuery = "SELECT * FROM videos";
+const videosAscQuery = "SELECT * FROM videos ORDER BY rating ASC";
+const videosDescQuery = "SELECT * FROM videos ORDER BY rating DESC";
+
+router.get("/videos", async (req, res) => {
+	if (!req.query.order) {
+		try {
+			const result = await db.query(videosQuery);
+			res.json(result.rows);
+		} catch (error) {
+			res.status(500).send(error);
+		}
+	} else if (req.query.order === "asc") {
+		try {
+			const result = await db.query(videosAscQuery);
+			res.json(result.rows);
+		} catch (error) {
+			res.status(500).send(error);
+		}
+	} else if (req.query.order === "desc") {
+		try {
+			const result = await db.query(videosDescQuery);
+			res.json(result.rows);
+		} catch (error) {
+			res.status(500).send(error);
+		}
 	}
 });
 
-router.get("/answers", async (req, res) => {
-	try {
-		const result = await db.query(answersQuery);
-		res.json(result.rows);
-	} catch (error) {
-		res.status(500).send(error);
-	}
-});
+router.post("/videos", (req, res) => {
+	let title = req.body.title;
+	let url = req.body.url;
+	let newVideo = {
+		id: Date.now(),
+		title: title,
+		url: url,
+		rating: 0,
+		posted: new Date().toString(),
+	};
+	const regExp =
+		/^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/;
+	const match = url.match(regExp);
+	if (title !== "" && match) {
+		const newID = newVideo.id;
+		const newTitle = newVideo.title;
+		const newURL = newVideo.url;
+		const newRating = newVideo.rating;
+		const newPosted = newVideo.posted;
 
-const isValid = (n) => {
-	return !isNaN(n) && n >= 0;
-};
-
-router.get("/questions/:id", (req, res) => {
-	const id = req.params.id;
-	const query = `SELECT * FROM questions WHERE id=${id}`;
-	const checkIfExists = `select exists(select 1 from questions where id=${id})`;
-	if (!isValid(id)) {
-		res.status(400).json({ "Server message": "Invalid id!" });
-	} else {
-		db.query(checkIfExists).then((result) => {
-			const exists = result.rows.map((el) => el.exists);
-			let doesExist = exists.pop();
-			if (!doesExist) {
-				res.status(404).json({
-					"Server message": `A customer by the id ${id} does not exist!`,
-				});
-			} else {
-				db.query(query)
-					.then((result) => res.json(result.rows))
-					.catch((e) => console.error(e));
-			}
+		const InsertQuery =
+			"INSERT INTO videos (id, title, url, rating, posted) VALUES ($1, $2, $3, $4, $5)";
+		client
+			.query(InsertQuery, [newID, newTitle, newURL, newRating, newPosted])
+			.then(() =>
+				res.status(201).json({
+					Result: "Success!",
+					Message: `Your video is successfully uploaded and given a new id: ${Date.now()}!`,
+				})
+			)
+			.catch((err) => console.error(err));
+	} else if (title === "") {
+		return res.json({
+			Result: "failure",
+			message: "Title should not be empty!",
+		});
+	} else if (url === "") {
+		return res.status(400).json({
+			Result: "failure",
+			message: "You have not entered a url!",
+		});
+	} else if (!match) {
+		return res.status(400).json({
+			Result: "failure",
+			message: "Invalid url!",
 		});
 	}
 });
 
-router.patch("/questions", async (req, res) => {
-	const title = req.body.title;
-	const question_content = req.body.question_content;
-	const id = req.body.id;
-	let questionUpdateQuery;
-	if (title) {
-		questionUpdateQuery =
-			"UPDATE questions SET title=$1, question_content=$2 WHERE id=$3";
-		try {
-			await db.query(questionUpdateQuery, [title, question_content, id]);
-			res.status(200).send({
-				Success: "Your question including the title is successfully updated!",
+router.patch("/videos", (req, res) => {
+	const updatedRating = req.body.rating;
+	const videoID = req.body.id;
+	const voteQuery = `UPDATE videos SET rating=${updatedRating} WHERE id=${videoID}`;
+
+	client
+		.query(voteQuery)
+		.then(() =>
+			res.json({
+				message: `The vote of the video by the id ${videoID} is successfully updated!`,
+			})
+		)
+		.catch((err) => console.error(err));
+});
+
+router.get("/video/:id", async (req, res) => {
+	const id = req.params.id;
+	const query = `SELECT * FROM videos WHERE id = ${id}`;
+	try {
+		const result = await client.query(query);
+		if (result.rowCount === 1) res.json(result.rows);
+		else
+			res.status(404).json({
+				message: `Video by id: ${id} could not be found!`,
 			});
-		} catch (error) {
-			res.status(500).send(error);
-		}
-	} else if (!title) {
-		questionUpdateQuery =
-			"UPDATE questions SET question_content=$1 WHERE id=$2";
-		try {
-			await db.query(questionUpdateQuery, [question_content, id]);
-			res.status(200).send({
-				Success: "Your question is successfully updated!",
-			});
-		} catch (error) {
-			res.status(500).send(error);
-		}
+	} catch (error) {
+		res.status(500).send(error);
 	}
 });
 
-router.patch("/answers", async (req, res) => {
-	const title = req.body.title;
-	const answer_content = req.body.answer_content;
-	const id = req.body.id;
-	let questionUpdateQuery;
-	if (title) {
-		questionUpdateQuery =
-			"UPDATE answers SET title=$1, answer_content=$2 WHERE id=$3";
-		try {
-			await db.query(questionUpdateQuery, [title, answer_content, id]);
-			res.status(200).send({
-				Success: "Your answer including the title is successfully updated!",
-			});
-		} catch (error) {
-			res.status(500).send(error);
-		}
-	} else if (!title) {
-		questionUpdateQuery =
-			"UPDATE answers SET answer_content=$1 WHERE id=$2";
-		try {
-			await db.query(questionUpdateQuery, [answer_content, id]);
-			res.status(200).send({
-				Success: "Your answer is successfully updated!",
-			});
-		} catch (error) {
-			res.status(500).send(error);
-		}
-	}
+router.delete("/video/:id", (req, res) => {
+	const id = req.params.id;
+	const deleteQuery = `DELETE FROM videos WHERE id=${id}`;
+	if (id) {
+		client
+			.query(deleteQuery)
+			.then(() =>
+				res.json({
+					Server: `A video by the id: ${id} is successfully deleted!`,
+				})
+			)
+			.catch((err) => console.error(err));
+	} else
+		res.status(404).json({
+			Server: `A video by the id: ${id} could not be found!`,
+		});
 });
 
 export default router;
