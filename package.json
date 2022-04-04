@@ -79,6 +79,7 @@
 		"helmet": "^5.0.2",
 		"material-icons": "^1.10.8",
 		"morgan": "^1.10.0",
+		"npm-check-updates": "^12.5.7",
 		"pg": "^8.7.3",
 		"react": "^18.0.0",
 		"react-bootstrap": "^2.2.2",
